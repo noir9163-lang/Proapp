@@ -1,21 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useGamification } from "@/lib/gamification";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Mic, Sparkles, CheckSquare, Share2, Plus, Search, FileText, MoreVertical, ArrowLeft, Link as LinkIcon, Download, Copy, Users, Globe, Lock } from "lucide-react";
+import { Mic, Sparkles, CheckSquare, Share2, Plus, Search, FileText, MoreVertical, ArrowLeft, Link as LinkIcon, Download, Copy, Users, Globe, Lock, Edit, Trash2, Printer } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 export default function Notes() {
   const { addXp } = useGamification();
   const [activeNote, setActiveNote] = useState<number | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   
+  // Mock state for note content to support editing
+  const [noteContent, setNoteContent] = useState({
+    title: "Calculus - Derivatives",
+    body: `The derivative of a function of a real variable measures the sensitivity to change of the function value (output value) with respect to a change in its argument (input value). Derivatives are a fundamental tool of calculus.
+
+For example, the derivative of the position of a moving object with respect to time is the object's velocity: this measures how quickly the position of the object changes when time advances.
+
+Key Concepts:
+- Differentiation is the action of computing a derivative.
+- The reverse process is called antidifferentiation.
+- The fundamental theorem of calculus relates antidifferentiation with integration.`
+  });
+
   const [notes, setNotes] = useState([
     { id: 1, title: "Calculus - Derivatives", preview: "The derivative of a function of a real variable measures the sensitivity to change of the function value...", date: "2 hours ago", tags: ["Math", "Exam"] },
     { id: 2, title: "History - WWII Causes", preview: "Main causes include the Treaty of Versailles, the rise of fascism in Italy...", date: "Yesterday", tags: ["History"] },
@@ -50,7 +65,7 @@ export default function Notes() {
 
     // In a real app, we would use the actual content from the editor state
     // For mock, we'll construct a simple text content
-    const content = `${activeNoteData.title}\n\n${activeNoteData.preview}\n\n(Full note content would be here in a real implementation)`;
+    const content = `${noteContent.title}\n\n${noteContent.body}`;
     
     const element = document.createElement("a");
     const file = new Blob([content], {type: 'text/plain'});
@@ -67,6 +82,23 @@ export default function Notes() {
     navigator.clipboard.writeText(`https://levelup.app/notes/share/${activeNote}`);
     alert("Link copied to clipboard!");
     addXp(5);
+  };
+
+  const handleCopyAll = () => {
+    navigator.clipboard.writeText(`${noteContent.title}\n\n${noteContent.body}`);
+    alert("Note content copied to clipboard!");
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleDelete = () => {
+    if (confirm("Are you sure you want to delete this note?")) {
+      setNotes(notes.filter(n => n.id !== activeNote));
+      setActiveNote(null);
+      alert("Note deleted");
+    }
   };
 
   return (
@@ -249,25 +281,57 @@ export default function Notes() {
                     </Tabs>
                   </DialogContent>
                 </Dialog>
-                <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setIsEditing(!isEditing)}>
+                      <Edit className="mr-2 h-4 w-4" /> {isEditing ? "Stop Editing" : "Edit Note"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleCopyAll}>
+                      <Copy className="mr-2 h-4 w-4" /> Copy All
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handlePrint}>
+                      <Printer className="mr-2 h-4 w-4" /> Print
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={handleDelete}>
+                      <Trash2 className="mr-2 h-4 w-4" /> Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
             {/* Editor Content (Mock) */}
-            <div className="flex-1 p-8 font-serif text-lg leading-relaxed outline-none overflow-y-auto">
-              <h1 className="text-3xl font-bold font-heading mb-6 text-foreground">Calculus - Derivatives</h1>
-              <p className="mb-4">The derivative of a function of a real variable measures the sensitivity to change of the function value (output value) with respect to a change in its argument (input value). Derivatives are a fundamental tool of calculus.</p>
-              <p className="mb-4">For example, the derivative of the position of a moving object with respect to time is the object's velocity: this measures how quickly the position of the object changes when time advances.</p>
-              <h2 className="text-xl font-bold mt-8 mb-4">Key Concepts</h2>
-              <ul className="list-disc pl-6 space-y-2 mb-6">
-                 <li>Differentiation is the action of computing a derivative.</li>
-                 <li>The reverse process is called antidifferentiation.</li>
-                 <li>The fundamental theorem of calculus relates antidifferentiation with integration.</li>
-              </ul>
-              <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-lg my-6">
-                <h3 className="font-bold text-yellow-800 mb-2 flex items-center gap-2"><Sparkles className="h-4 w-4" /> AI Summary</h3>
-                <p className="text-sm text-yellow-900">Derivatives measure instantaneous rate of change. Velocity is the derivative of position. Differentiation finds the derivative, while antidifferentiation reverses it, connecting to integration via the Fundamental Theorem of Calculus.</p>
-              </div>
+            <div className="flex-1 p-8 font-serif text-lg leading-relaxed outline-none overflow-y-auto relative">
+              {isEditing ? (
+                <div className="h-full flex flex-col gap-4">
+                  <Input 
+                    value={noteContent.title} 
+                    onChange={(e) => setNoteContent(prev => ({ ...prev, title: e.target.value }))}
+                    className="text-3xl font-bold font-heading h-auto p-2"
+                  />
+                  <textarea 
+                    className="flex-1 resize-none bg-transparent border-none outline-none p-2 font-serif text-lg leading-relaxed"
+                    value={noteContent.body}
+                    onChange={(e) => setNoteContent(prev => ({ ...prev, body: e.target.value }))}
+                  />
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-3xl font-bold font-heading mb-6 text-foreground">{noteContent.title}</h1>
+                  <div className="whitespace-pre-wrap mb-8">
+                    {noteContent.body}
+                  </div>
+                  <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-lg my-6">
+                    <h3 className="font-bold text-yellow-800 mb-2 flex items-center gap-2"><Sparkles className="h-4 w-4" /> AI Summary</h3>
+                    <p className="text-sm text-yellow-900">Derivatives measure instantaneous rate of change. Velocity is the derivative of position. Differentiation finds the derivative, while antidifferentiation reverses it, connecting to integration via the Fundamental Theorem of Calculus.</p>
+                  </div>
+                </>
+              )}
             </div>
           </>
         ) : (
