@@ -129,8 +129,8 @@ export default function Notes() {
   };
 
   const insertChecklist = () => {
-    // Simple checklist implementation for mockup
-    const html = '<ul style="list-style-type: none; padding-left: 0;"><li><input type="checkbox"> Item 1</li><li><input type="checkbox"> Item 2</li></ul>';
+    // Improved checklist implementation
+    const html = '<ul style="list-style: none; padding-left: 0;"><li style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" style="margin: 0; width: 1.2em; height: 1.2em; accent-color: hsl(var(--primary));"> <span>Checklist Item</span></li></ul>';
     document.execCommand('insertHTML', false, html);
   };
 
@@ -415,7 +415,7 @@ export default function Notes() {
                   />
                   <div 
                     ref={editorRef}
-                    className="flex-1 outline-none font-serif text-lg leading-relaxed prose prose-lg max-w-none dark:prose-invert empty:before:content-['Start_typing...'] empty:before:text-muted-foreground"
+                    className="flex-1 outline-none font-serif text-lg leading-relaxed prose prose-lg max-w-none dark:prose-invert empty:before:content-['Start_typing...'] empty:before:text-muted-foreground [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1"
                     contentEditable
                     suppressContentEditableWarning
                   />
