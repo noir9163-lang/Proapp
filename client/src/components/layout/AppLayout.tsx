@@ -121,7 +121,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </header>
 
         {/* Content */}
-        <div className="flex-1 p-4 md:p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
+        <div className="flex-1 p-4 pb-28 md:p-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
           {children}
         </div>
 
