@@ -8,7 +8,7 @@ import {
   Mic, Sparkles, CheckSquare, Share2, Plus, Search, FileText, MoreVertical, 
   ArrowLeft, Link as LinkIcon, Download, Copy, Users, Globe, Lock, Edit, 
   Trash2, Printer, Bold, Italic, Underline, Highlighter, List, ListOrdered, 
-  Minus, Type, Heading1, Heading2, Palette
+  Minus, Type, Heading1, Heading2, Palette, Strikethrough
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
@@ -360,6 +360,7 @@ export default function Notes() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => execCmd('bold')} title="Bold"><Bold className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => execCmd('italic')} title="Italic"><Italic className="h-4 w-4" /></Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => execCmd('underline')} title="Underline"><Underline className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => execCmd('strikeThrough')} title="Strikethrough"><Strikethrough className="h-4 w-4" /></Button>
                   
                   <Popover>
                     <PopoverTrigger asChild>
