@@ -4,8 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Mic, Sparkles, CheckSquare, Share2, Plus, Search, FileText, MoreVertical, ArrowLeft } from "lucide-react";
+import { Mic, Sparkles, CheckSquare, Share2, Plus, Search, FileText, MoreVertical, ArrowLeft, Link as LinkIcon, Download, Copy, Users, Globe, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export default function Notes() {
   const { addXp } = useGamification();
@@ -38,6 +42,31 @@ export default function Notes() {
         alert("Recording finished! Transcribing... (Mock)");
       }, 3000);
     }
+  };
+
+  const handleDownload = () => {
+    const activeNoteData = notes.find(n => n.id === activeNote);
+    if (!activeNoteData) return;
+
+    // In a real app, we would use the actual content from the editor state
+    // For mock, we'll construct a simple text content
+    const content = `${activeNoteData.title}\n\n${activeNoteData.preview}\n\n(Full note content would be here in a real implementation)`;
+    
+    const element = document.createElement("a");
+    const file = new Blob([content], {type: 'text/plain'});
+    element.href = URL.createObjectURL(file);
+    element.download = `${activeNoteData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    document.body.appendChild(element); // Required for this to work in FireFox
+    element.click();
+    document.body.removeChild(element);
+    
+    addXp(5); // Small reward for exporting
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(`https://levelup.app/notes/share/${activeNote}`);
+    alert("Link copied to clipboard!");
+    addXp(5);
   };
 
   return (
@@ -116,7 +145,95 @@ export default function Notes() {
                 </Button>
               </div>
               <div className="flex items-center gap-1 ml-2">
-                <Button variant="ghost" size="icon"><Share2 className="h-4 w-4" /></Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-primary hover:text-primary/80 hover:bg-primary/10">
+                      <Share2 className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Share Note</DialogTitle>
+                      <DialogDescription>
+                        Collaborate with friends or export your notes.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <Tabs defaultValue="link" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2 mb-4">
+                        <TabsTrigger value="link">Share Link</TabsTrigger>
+                        <TabsTrigger value="export">Export File</TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="link" className="space-y-4">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between space-x-2">
+                            <Label htmlFor="access" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                              General Access
+                            </Label>
+                            <Select defaultValue="viewer">
+                              <SelectTrigger className="w-[140px] h-8">
+                                <SelectValue placeholder="Select access" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="viewer">Viewer</SelectItem>
+                                <SelectItem value="commenter">Commenter</SelectItem>
+                                <SelectItem value="editor">Editor</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <div className="grid flex-1 gap-2">
+                              <Label htmlFor="link" className="sr-only">Link</Label>
+                              <div className="flex items-center rounded-md border px-3 py-2 bg-muted/50">
+                                <LinkIcon className="mr-2 h-4 w-4 text-muted-foreground" />
+                                <span className="text-sm text-muted-foreground truncate">
+                                  https://levelup.app/notes/share/{activeNote}
+                                </span>
+                              </div>
+                            </div>
+                            <Button size="sm" className="px-3" onClick={handleCopyLink}>
+                              <span className="sr-only">Copy</span>
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </div>
+
+                          <div className="space-y-2">
+                            <h4 className="text-sm font-medium">Share to Platform</h4>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="icon" className="rounded-full text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100">
+                                <Globe className="h-4 w-4" />
+                              </Button>
+                              <Button variant="outline" size="icon" className="rounded-full text-sky-500 border-sky-200 bg-sky-50 hover:bg-sky-100">
+                                <svg className="h-4 w-4 fill-current" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                              </Button>
+                              <Button variant="outline" size="icon" className="rounded-full text-indigo-600 border-indigo-200 bg-indigo-50 hover:bg-indigo-100">
+                                <Users className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="export" className="space-y-4">
+                        <div className="rounded-lg border p-4 bg-muted/20">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <FileText className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-medium">Text File (.txt)</h4>
+                              <p className="text-sm text-muted-foreground">Simple text format, editable in any editor.</p>
+                            </div>
+                          </div>
+                        </div>
+                        <Button className="w-full" onClick={handleDownload}>
+                          <Download className="mr-2 h-4 w-4" /> Download Note
+                        </Button>
+                      </TabsContent>
+                    </Tabs>
+                  </DialogContent>
+                </Dialog>
                 <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
               </div>
             </div>
