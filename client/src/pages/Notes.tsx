@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Mic, Sparkles, CheckSquare, Share2, Plus, Search, FileText, MoreVertical } from "lucide-react";
+import { Mic, Sparkles, CheckSquare, Share2, Plus, Search, FileText, MoreVertical, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function Notes() {
@@ -43,7 +43,10 @@ export default function Notes() {
   return (
     <div className="h-[calc(100vh-100px)] flex gap-6">
       {/* Sidebar List */}
-      <div className="w-full md:w-80 flex flex-col gap-4 h-full">
+      <div className={cn(
+        "w-full md:w-80 flex-col gap-4 h-full",
+        activeNote ? "hidden md:flex" : "flex"
+      )}>
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -78,29 +81,41 @@ export default function Notes() {
       </div>
 
       {/* Editor Area */}
-      <div className="hidden md:flex flex-1 flex-col bg-card border border-border rounded-2xl shadow-sm overflow-hidden h-full">
+      <div className={cn(
+        "flex-1 flex-col bg-card border border-border rounded-2xl shadow-sm overflow-hidden h-full",
+        activeNote ? "flex" : "hidden md:flex"
+      )}>
         {activeNote ? (
           <>
             {/* Toolbar */}
-            <div className="border-b border-border p-4 flex items-center justify-between bg-muted/30">
+            <div className="border-b border-border p-4 flex items-center justify-between bg-muted/30 overflow-x-auto">
               <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="md:hidden mr-1" 
+                  onClick={() => setActiveNote(null)}
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                
                 <Button 
                   variant={isRecording ? "destructive" : "outline"} 
                   size="sm" 
                   onClick={toggleRecord}
-                  className={cn("gap-2 rounded-full transition-all", isRecording && "animate-pulse")}
+                  className={cn("gap-2 rounded-full transition-all whitespace-nowrap", isRecording && "animate-pulse")}
                 >
-                  <Mic className="h-4 w-4" /> {isRecording ? "Recording..." : "Voice Note"}
+                  <Mic className="h-4 w-4" /> {isRecording ? "Rec..." : "Voice"}
                 </Button>
-                <div className="h-4 w-px bg-border mx-2"></div>
-                <Button variant="ghost" size="sm" className="text-purple-600 hover:bg-purple-50 hover:text-purple-700" onClick={handleSummarize}>
-                  <Sparkles className="h-4 w-4 mr-2" /> AI Summarize
+                <div className="h-4 w-px bg-border mx-1"></div>
+                <Button variant="ghost" size="sm" className="text-purple-600 hover:bg-purple-50 hover:text-purple-700 whitespace-nowrap" onClick={handleSummarize}>
+                  <Sparkles className="h-4 w-4 mr-1 md:mr-2" /> <span className="hidden sm:inline">AI Summarize</span><span className="sm:hidden">AI</span>
                 </Button>
-                <Button variant="ghost" size="sm" onClick={handleTextToTask}>
-                  <CheckSquare className="h-4 w-4 mr-2" /> Text-to-Task
+                <Button variant="ghost" size="sm" onClick={handleTextToTask} className="whitespace-nowrap">
+                  <CheckSquare className="h-4 w-4 mr-1 md:mr-2" /> <span className="hidden sm:inline">Text-to-Task</span><span className="sm:hidden">Tasks</span>
                 </Button>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 ml-2">
                 <Button variant="ghost" size="icon"><Share2 className="h-4 w-4" /></Button>
                 <Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button>
               </div>
