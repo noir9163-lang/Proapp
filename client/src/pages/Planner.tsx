@@ -72,6 +72,10 @@ export default function Planner() {
     }
   };
 
+  const handleSetReminder = (id: string) => {
+    alert("Reminder set for this task!");
+  };
+
   return (
     <div className="space-y-6 h-full flex flex-col">
       <div className="flex items-center justify-between">
@@ -187,14 +191,23 @@ export default function Planner() {
                     </div>
                     
                     <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
+                        onClick={() => handleSetReminder(task.id)}
+                      >
                         <Bell className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => deleteTask(task.id)}
+                        onClick={() => {
+                          if (confirm("Are you sure you want to delete this task?")) {
+                            deleteTask(task.id);
+                          }
+                        }}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
