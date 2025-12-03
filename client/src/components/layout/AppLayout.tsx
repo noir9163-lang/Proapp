@@ -72,16 +72,18 @@ export function AppLayout({ children }: AppLayoutProps) {
           {navItems.map((item) => {
             const isActive = location === item.href;
             return (
-              <Link key={item.href} href={item.href}>
-                <a className={cn(
+              <Link 
+                key={item.href} 
+                href={item.href}
+                className={cn(
                   "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
                   isActive 
                     ? "bg-primary text-primary-foreground shadow-md shadow-primary/20 font-medium" 
                     : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-muted-foreground"
-                )}>
-                  <item.icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary")} />
-                  {item.label}
-                </a>
+                )}
+              >
+                <item.icon className={cn("h-5 w-5", isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-primary")} />
+                {item.label}
               </Link>
             );
           })}
@@ -130,14 +132,16 @@ export function AppLayout({ children }: AppLayoutProps) {
           {navItems.slice(0, 5).map((item) => {
              const isActive = location === item.href;
              return (
-               <Link key={item.href} href={item.href}>
-                 <a className={cn(
+               <Link 
+                 key={item.href} 
+                 href={item.href}
+                 className={cn(
                    "flex flex-col items-center justify-center p-2 rounded-lg gap-1 w-full",
                    isActive ? "text-primary" : "text-muted-foreground"
-                 )}>
-                   <item.icon className={cn("h-5 w-5", isActive && "fill-current")} />
-                   <span className="text-[10px] font-medium">{item.label}</span>
-                 </a>
+                 )}
+               >
+                 <item.icon className={cn("h-5 w-5", isActive && "fill-current")} />
+                 <span className="text-[10px] font-medium">{item.label}</span>
                </Link>
              )
           })}
