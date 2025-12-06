@@ -8,7 +8,8 @@ import {
   ShoppingBag, 
   Users,
   Menu,
-  Bell
+  Bell,
+  Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGamification } from '@/lib/gamification';
@@ -35,6 +36,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     { icon: NotebookPen, label: 'Notes+', href: '/notes' },
     { icon: Target, label: 'Focus', href: '/focus' },
     { icon: Users, label: 'Social', href: '/social' },
+    { icon: Clock, label: 'Alarms', href: '/alarm' },
     { icon: ShoppingBag, label: 'Shop', href: '/shop' },
   ];
 

@@ -7,13 +7,13 @@ import { GamificationProvider } from "@/lib/gamification";
 import { AppLayout } from "@/components/layout/AppLayout";
 import NotFound from "@/pages/not-found";
 
-// Placeholder imports (we will create these next)
 import Dashboard from "@/pages/Dashboard";
 import Planner from "@/pages/Planner";
 import Notes from "@/pages/Notes";
 import Focus from "@/pages/Focus";
 import Social from "@/pages/Social";
 import Shop from "@/pages/Shop";
+import Alarm from "@/pages/Alarm";
 
 function Router() {
   return (
@@ -25,6 +25,7 @@ function Router() {
         <Route path="/focus" component={Focus} />
         <Route path="/social" component={Social} />
         <Route path="/shop" component={Shop} />
+        <Route path="/alarm" component={Alarm} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>
