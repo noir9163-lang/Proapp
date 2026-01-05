@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Alarm, type InsertAlarm } from "@shared/schema";
+import { type User, type InsertUser, type Alarm, type InsertAlarm, type Note, type InsertNote } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -12,15 +12,24 @@ export interface IStorage {
   createAlarm(userId: string, alarm: InsertAlarm): Promise<Alarm>;
   updateAlarm(id: string, alarm: Partial<InsertAlarm & { lastTriggered?: Date; snoozeUntil?: Date | null }>): Promise<Alarm | undefined>;
   deleteAlarm(id: string): Promise<boolean>;
+
+  // Note methods
+  getNotes(userId: string): Promise<Note[]>;
+  getNote(id: string): Promise<Note | undefined>;
+  createNote(userId: string, note: InsertNote): Promise<Note>;
+  updateNote(id: string, note: Partial<InsertNote>): Promise<Note | undefined>;
+  deleteNote(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private alarms: Map<string, Alarm>;
+  private notes: Map<string, Note>;
 
   constructor() {
     this.users = new Map();
     this.alarms = new Map();
+    this.notes = new Map();
   }
 
   async getUser(id: string): Promise<User | undefined> {
@@ -82,6 +91,47 @@ export class MemStorage implements IStorage {
 
   async deleteAlarm(id: string): Promise<boolean> {
     return this.alarms.delete(id);
+  }
+
+  // Note methods
+  async getNotes(userId: string): Promise<Note[]> {
+    return Array.from(this.notes.values()).filter(
+      (note) => note.userId === userId,
+    );
+  }
+
+  async getNote(id: string): Promise<Note | undefined> {
+    return this.notes.get(id);
+  }
+
+  async createNote(userId: string, insertNote: InsertNote): Promise<Note> {
+    const id = randomUUID();
+    const now = new Date();
+    const note: Note = {
+      ...insertNote,
+      id,
+      userId,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.notes.set(id, note);
+    return note;
+  }
+
+  async updateNote(id: string, updates: Partial<InsertNote>): Promise<Note | undefined> {
+    const note = this.notes.get(id);
+    if (!note) return undefined;
+    const updated: Note = {
+      ...note,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.notes.set(id, updated);
+    return updated;
+  }
+
+  async deleteNote(id: string): Promise<boolean> {
+    return this.notes.delete(id);
   }
 }
 

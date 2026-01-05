@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import type { InsertAlarm } from "@shared/schema";
+import type { InsertAlarm, InsertNote } from "@shared/schema";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -67,6 +67,69 @@ export async function registerRoutes(
       res.json({ success: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to delete alarm" });
+    }
+  });
+
+  // Note routes
+  app.get("/api/notes", async (req, res) => {
+    try {
+      const userId = req.query.userId as string;
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      const notes = await storage.getNotes(userId);
+      res.json(notes);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch notes" });
+    }
+  });
+
+  app.get("/api/notes/:id", async (req, res) => {
+    try {
+      const note = await storage.getNote(req.params.id);
+      if (!note) {
+        return res.status(404).json({ error: "Note not found" });
+      }
+      res.json(note);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch note" });
+    }
+  });
+
+  app.post("/api/notes", async (req, res) => {
+    try {
+      const { userId, ...noteData } = req.body as { userId: string } & InsertNote;
+      if (!userId) {
+        return res.status(400).json({ error: "userId is required" });
+      }
+      const note = await storage.createNote(userId, noteData);
+      res.status(201).json(note);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create note" });
+    }
+  });
+
+  app.patch("/api/notes/:id", async (req, res) => {
+    try {
+      const note = await storage.updateNote(req.params.id, req.body);
+      if (!note) {
+        return res.status(404).json({ error: "Note not found" });
+      }
+      res.json(note);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update note" });
+    }
+  });
+
+  app.delete("/api/notes/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteNote(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Note not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete note" });
     }
   });
 

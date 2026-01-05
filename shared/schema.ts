@@ -23,6 +23,16 @@ export const alarms = pgTable("alarms", {
   updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
 
+export const notes = pgTable("notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("userId").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  tags: text("tags").notNull().default("[]"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -36,7 +46,15 @@ export const insertAlarmSchema = createInsertSchema(alarms).pick({
   repeatDays: true,
 });
 
+export const insertNoteSchema = createInsertSchema(notes).pick({
+  title: true,
+  body: true,
+  tags: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertAlarm = z.infer<typeof insertAlarmSchema>;
 export type Alarm = typeof alarms.$inferSelect;
+export type InsertNote = z.infer<typeof insertNoteSchema>;
+export type Note = typeof notes.$inferSelect;

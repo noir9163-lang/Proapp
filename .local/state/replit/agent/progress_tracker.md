@@ -1,4 +1,4 @@
-[x] 1. Install the required packages
-[x] 2. Restart the workflow to see if the project is working
-[x] 3. Verify the project is working using the feedback tool
-[x] 4. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
+[x] 1. Define notes table in schema.ts
+[x] 2. Implement storage methods for notes in storage.ts
+[x] 3. Create API routes for notes in routes.ts
+[x] 4. Integrate frontend with notes API in Notes.tsx

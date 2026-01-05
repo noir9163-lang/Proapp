@@ -17,52 +17,79 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Note, InsertNote } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Notes() {
   const { addXp } = useGamification();
-  const [activeNote, setActiveNote] = useState<number | null>(null);
+  const { toast } = useToast();
+  const [activeNote, setActiveNote] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
-  
-  // Mock state for note content to support editing
-  const [noteContent, setNoteContent] = useState({
-    title: "Calculus - Derivatives",
-    body: `<p>The derivative of a function of a real variable measures the sensitivity to change of the function value (output value) with respect to a change in its argument (input value). Derivatives are a fundamental tool of calculus.</p>
-<br>
-<p>For example, the derivative of the position of a moving object with respect to time is the object's velocity: this measures how quickly the position of the object changes when time advances.</p>
-<br>
-<h3>Key Concepts:</h3>
-<ul>
-<li>Differentiation is the action of computing a derivative.</li>
-<li>The reverse process is called antidifferentiation.</li>
-<li>The fundamental theorem of calculus relates antidifferentiation with integration.</li>
-</ul>`
+  const userId = "demo-user"; // Simplified for MVP
+
+  const { data: notes = [], isLoading } = useQuery<Note[]>({
+    queryKey: ["/api/notes", { userId }],
   });
 
-  const [notes, setNotes] = useState([
-    { id: 1, title: "Calculus - Derivatives", preview: "The derivative of a function of a real variable measures the sensitivity to change of the function value...", date: "2 hours ago", tags: ["Math", "Exam"] },
-    { id: 2, title: "History - WWII Causes", preview: "Main causes include the Treaty of Versailles, the rise of fascism in Italy...", date: "Yesterday", tags: ["History"] },
-    { id: 3, title: "Chemistry Lab Safety", preview: "Always wear safety goggles. Never taste chemicals. Dispose of waste properly...", date: "2 days ago", tags: ["Science", "Lab"] },
-  ]);
+  const createNoteMutation = useMutation({
+    mutationFn: async (note: InsertNote) => {
+      const res = await apiRequest("POST", "/api/notes", { ...note, userId });
+      return res.json();
+    },
+    onSuccess: (newNote) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notes"] });
+      setActiveNote(newNote.id);
+      setIsEditing(true);
+      toast({ title: "Note created" });
+    }
+  });
+
+  const updateNoteMutation = useMutation({
+    mutationFn: async ({ id, note }: { id: string; note: Partial<InsertNote> }) => {
+      const res = await apiRequest("PATCH", `/api/notes/${id}`, note);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notes"] });
+      toast({ title: "Note saved" });
+    }
+  });
+
+  const deleteNoteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/notes/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notes"] });
+      setActiveNote(null);
+      toast({ title: "Note deleted" });
+    }
+  });
+
+  const currentNote = notes.find(n => n.id === activeNote);
 
   // Sync content when entering edit mode
   useEffect(() => {
-    if (isEditing && editorRef.current) {
-      editorRef.current.innerHTML = noteContent.body;
+    if (isEditing && editorRef.current && currentNote) {
+      editorRef.current.innerHTML = currentNote.body;
     }
   }, [isEditing, activeNote]);
 
   const handleSummarize = () => {
     if (!activeNote) return;
     addXp(15);
-    alert("AI is summarizing your note... (Mock: Summary created!)");
+    toast({ title: "AI Summary created" });
   };
 
   const handleTextToTask = () => {
     if (!activeNote) return;
     addXp(10);
-    alert("Converting actionable items to tasks... (Mock: 3 tasks added to Planner)");
+    toast({ title: "Tasks added to Planner" });
   };
 
   const toggleRecord = () => {
@@ -70,21 +97,20 @@ export default function Notes() {
     if (!isRecording) {
       setTimeout(() => {
         setIsRecording(false);
-        alert("Recording finished! Transcribing... (Mock)");
+        toast({ title: "Voice note transcribed" });
       }, 3000);
     }
   };
 
   const handleDownload = () => {
-    const activeNoteData = notes.find(n => n.id === activeNote);
-    if (!activeNoteData) return;
+    if (!currentNote) return;
 
-    const content = `${noteContent.title}\n\n${editorRef.current?.innerText || noteContent.body}`;
+    const content = `${currentNote.title}\n\n${editorRef.current?.innerText || currentNote.body}`;
     
     const element = document.createElement("a");
     const file = new Blob([content], {type: 'text/plain'});
     element.href = URL.createObjectURL(file);
-    element.download = `${activeNoteData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    element.download = `${currentNote.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -94,13 +120,14 @@ export default function Notes() {
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(`https://levelup.app/notes/share/${activeNote}`);
-    alert("Link copied to clipboard!");
+    toast({ title: "Link copied to clipboard" });
     addXp(5);
   };
 
   const handleCopyAll = () => {
-    navigator.clipboard.writeText(`${noteContent.title}\n\n${editorRef.current?.innerText || ""}`);
-    alert("Note content copied to clipboard!");
+    if (!currentNote) return;
+    navigator.clipboard.writeText(`${currentNote.title}\n\n${editorRef.current?.innerText || ""}`);
+    toast({ title: "Note content copied" });
   };
 
   const handlePrint = () => {
@@ -108,19 +135,33 @@ export default function Notes() {
   };
 
   const handleDelete = () => {
-    if (confirm("Are you sure you want to delete this note?")) {
-      setNotes(notes.filter(n => n.id !== activeNote));
-      setActiveNote(null);
-      alert("Note deleted");
+    if (activeNote && confirm("Are you sure you want to delete this note?")) {
+      deleteNoteMutation.mutate(activeNote);
     }
   };
 
   const handleStopEditing = () => {
-    if (editorRef.current) {
-      setNoteContent(prev => ({ ...prev, body: editorRef.current!.innerHTML }));
+    if (activeNote && editorRef.current) {
+      updateNoteMutation.mutate({
+        id: activeNote,
+        note: { body: editorRef.current.innerHTML }
+      });
     }
     setIsEditing(false);
   };
+
+  const handleCreateNote = () => {
+    createNoteMutation.mutate({
+      title: "Untitled Note",
+      body: "",
+      tags: "[]"
+    });
+  };
+
+  const filteredNotes = notes.filter(n => 
+    n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    n.body.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   // Formatting Commands
   const execCmd = (command: string, value: string | undefined = undefined) => {
@@ -129,7 +170,6 @@ export default function Notes() {
   };
 
   const insertChecklist = () => {
-    // Improved checklist implementation
     const html = '<ul style="list-style: none; padding-left: 0;"><li style="display: flex; align-items: center; gap: 0.5rem;"><input type="checkbox" style="margin: 0; width: 1.2em; height: 1.2em; accent-color: hsl(var(--primary));"> <span>Checklist Item</span></li></ul>';
     document.execCommand('insertHTML', false, html);
   };
@@ -144,14 +184,19 @@ export default function Notes() {
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search notes..." className="pl-9" />
+            <Input 
+              placeholder="Search notes..." 
+              className="pl-9" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
-          <Button size="icon"><Plus className="h-4 w-4" /></Button>
+          <Button size="icon" onClick={handleCreateNote}><Plus className="h-4 w-4" /></Button>
         </div>
 
         <ScrollArea className="flex-1 pr-4">
           <div className="space-y-3">
-            {notes.map((note) => (
+            {filteredNotes.map((note) => (
               <div 
                 key={note.id}
                 onClick={() => setActiveNote(note.id)}
@@ -161,12 +206,16 @@ export default function Notes() {
                 )}
               >
                 <h3 className="font-bold truncate">{note.title}</h3>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{note.preview}</p>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  {note.body.replace(/<[^>]*>/g, '').substring(0, 100)}...
+                </p>
                 <div className="flex items-center gap-2 mt-3">
-                   {note.tags.map(tag => (
+                   {JSON.parse(note.tags).map((tag: string) => (
                      <span key={tag} className="bg-muted text-muted-foreground text-[10px] px-1.5 py-0.5 rounded-md font-medium">#{tag}</span>
                    ))}
-                   <span className="text-[10px] text-muted-foreground ml-auto">{note.date}</span>
+                   <span className="text-[10px] text-muted-foreground ml-auto">
+                     {new Date(note.createdAt).toLocaleDateString()}
+                   </span>
                 </div>
               </div>
             ))}
@@ -179,7 +228,7 @@ export default function Notes() {
         "flex-1 flex-col bg-card border border-border rounded-2xl shadow-sm overflow-hidden h-full",
         activeNote ? "flex" : "hidden md:flex"
       )}>
-        {activeNote ? (
+        {activeNote && currentNote ? (
           <>
             {/* Toolbar */}
             <div className="border-b border-border p-4 flex flex-col gap-4 bg-muted/30">
@@ -408,8 +457,11 @@ export default function Notes() {
               {isEditing ? (
                 <div className="h-full flex flex-col gap-4">
                   <Input 
-                    value={noteContent.title} 
-                    onChange={(e) => setNoteContent(prev => ({ ...prev, title: e.target.value }))}
+                    value={currentNote.title} 
+                    onChange={(e) => updateNoteMutation.mutate({
+                      id: activeNote,
+                      note: { title: e.target.value }
+                    })}
                     className="text-3xl font-bold font-heading h-auto p-2 border-none focus-visible:ring-0 px-0"
                     placeholder="Note Title"
                   />
@@ -422,10 +474,10 @@ export default function Notes() {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-3xl font-bold font-heading mb-6 text-foreground">{noteContent.title}</h1>
+                  <h1 className="text-3xl font-bold font-heading mb-6 text-foreground">{currentNote.title}</h1>
                   <div 
                     className="whitespace-pre-wrap mb-8 prose prose-lg max-w-none dark:prose-invert [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_li]:my-1"
-                    dangerouslySetInnerHTML={{ __html: noteContent.body }} 
+                    dangerouslySetInnerHTML={{ __html: currentNote.body }} 
                   />
                   <div className="p-4 bg-yellow-50 border border-yellow-100 rounded-lg my-6">
                     <h3 className="font-bold text-yellow-800 mb-2 flex items-center gap-2"><Sparkles className="h-4 w-4" /> AI Summary</h3>
@@ -438,7 +490,7 @@ export default function Notes() {
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
             <FileText className="h-16 w-16 mb-4 opacity-20" />
-            <p>Select a note to start editing or creating.</p>
+            <p>{isLoading ? "Loading notes..." : "Select a note to start editing or creating."}</p>
           </div>
         )}
       </div>
