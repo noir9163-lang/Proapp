@@ -74,11 +74,12 @@ export async function registerRoutes(
   app.get("/api/notes", async (req, res) => {
     try {
       const userId = req.query.userId as string;
-      if (!userId) {
-        return res.status(400).json({ error: "userId is required" });
-      }
-      const notes = await storage.getNotes(userId);
-      res.json(notes);
+      const notes = await storage.getNotes(userId || "demo-user");
+      // Sort notes by createdAt descending to show newest first
+      const sortedNotes = notes.sort((a, b) => 
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+      res.json(sortedNotes);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch notes" });
     }

@@ -33,7 +33,14 @@ export default function Notes() {
   const userId = "demo-user"; // Simplified for MVP
 
   const { data: notes = [], isLoading } = useQuery<Note[]>({
-    queryKey: ["/api/notes", userId],
+    queryKey: ["/api/notes"],
+    queryFn: async () => {
+      const res = await fetch(`/api/notes?userId=${userId}`);
+      if (!res.ok) throw new Error("Failed to fetch notes");
+      return res.json();
+    },
+    staleTime: 0,
+    gcTime: 0
   });
 
   const createNoteMutation = useMutation({
@@ -42,7 +49,9 @@ export default function Notes() {
       return res.json();
     },
     onSuccess: (newNote) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notes"] });
+      queryClient.setQueryData(["/api/notes"], (old: Note[] | undefined) => {
+        return old ? [newNote, ...old] : [newNote];
+      });
       setActiveNote(newNote.id);
       setIsEditing(true);
       toast({ title: "Note created" });
