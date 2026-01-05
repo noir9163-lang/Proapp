@@ -111,6 +111,7 @@ export class MemStorage implements IStorage {
       ...insertNote,
       id,
       userId,
+      tags: insertNote.tags ?? "[]",
       createdAt: now,
       updatedAt: now,
     };

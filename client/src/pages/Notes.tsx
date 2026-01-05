@@ -33,7 +33,7 @@ export default function Notes() {
   const userId = "demo-user"; // Simplified for MVP
 
   const { data: notes = [], isLoading } = useQuery<Note[]>({
-    queryKey: ["/api/notes", { userId }],
+    queryKey: ["/api/notes", userId],
   });
 
   const createNoteMutation = useMutation({
